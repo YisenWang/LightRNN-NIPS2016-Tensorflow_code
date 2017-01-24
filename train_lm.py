@@ -90,6 +90,8 @@ class LSTMLM(object):
             self.probs_c = []
 
             for t, _input_c in enumerate(input_c):
+                if t>0:
+                    tf.get_variable_scope().reuse_variables()
                 output_r, state_c = self.lstm(_input_c, state_r, output_dropout=lstm_dropout)
                 logit_r = tf.matmul(output_r, softmax_w_r) + softmax_b_r
                 row = tf.argmax(logit_r, axis=1)
@@ -242,6 +244,8 @@ def main(_):
     
     session_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
     session_config.gpu_options.allow_growth = True
+
+    last_ppl = 1000.0
     with tf.Session(graph=graph, config=session_config) as session:
         session.run(tf.global_variables_initializer())
         for epoch in range(config.epoch_num):
@@ -259,15 +263,15 @@ def main(_):
             cost, word_cnt, ppl, _, _ = run(session, testm, reader, word_dict)
             INFO_LOG("Epoch %d Test perplexity %.3f words %d" % (epoch + 1, ppl, word_cnt))
 
-            # get word_id and loss 
-            
-            if ((epoch + 1) % 20 == 0):
+            if (last_ppl - ppl) < 5:
                 
                 word_dict = mcmf.MCMF(word_dict, loss_dict_r, loss_dict_c)
 
                 lr_updater = LearningRateUpdater(config.learning_rate, config.decay, config.decay_when)
 
                 INFO_LOG("Epoch %d Allocation Success" % (epoch + 1))
+
+            last_ppl = ppl
 
 
 if __name__ == '__main__':

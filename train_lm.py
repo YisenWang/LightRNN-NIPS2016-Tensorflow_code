@@ -263,7 +263,7 @@ def main(_):
             cost, word_cnt, ppl, _, _ = run(session, testm, reader, word_dict)
             INFO_LOG("Epoch %d Test perplexity %.3f words %d" % (epoch + 1, ppl, word_cnt))
 
-            if (last_ppl - ppl) < 5:
+            if (last_ppl - ppl) < 5 and (last_ppl - ppl) > 0:
                 
                 word_dict = mcmf.MCMF(word_dict, loss_dict_r, loss_dict_c)
 

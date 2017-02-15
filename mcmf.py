@@ -29,11 +29,14 @@ def MCMF(word_to_id, loss_r, loss_c):
 
   cnt_dict={}
 
+  original_cost = 0
+
   for i, word in enumerate(word_to_id.keys()):
     position = word_to_id[word]
     lossr = map(sum, zip(*loss_r[tuple(position)]))
     lossc = map(sum, zip(*loss_c[tuple(position)]))
     cnt = 0
+    original_cost += (lossr[position[0]] + lossc[position[1]])
     for m in range(len(lossr)):
       for n in range(len(lossc)):
         if cnt >= len(word_to_id):
@@ -44,7 +47,7 @@ def MCMF(word_to_id, loss_r, loss_c):
 
         min_cost_flow.AddArcWithCapacityAndUnitCost(i+1, len(word_to_id)+1+cnt, 1, lossint)
         cnt += 1 
-
+  print "Original costs", original_cost
   # add arc position to dst
   for j, position in enumerate(word_to_id.keys()):
     min_cost_flow.AddArcWithCapacityAndUnitCost(len(word_to_id)+1+j, sink, 1, 0)
@@ -56,7 +59,7 @@ def MCMF(word_to_id, loss_r, loss_c):
   # invoke the solver
   new_word_to_id = {}
   if min_cost_flow.Solve() == min_cost_flow.OPTIMAL:
-    print "Total Costs = ", min_cost_flow.OptimalCost()
+    print "After Optimization Costs = ", min_cost_flow.OptimalCost()
     print 
 
     for arc in xrange(min_cost_flow.NumArcs()):

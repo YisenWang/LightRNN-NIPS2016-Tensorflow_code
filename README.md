@@ -18,3 +18,6 @@ python train_lm.py --data_path=./data/
 - For minimum weight perfect matching algorithm, we use the minimum cost flow solver in ortools. 
 - Currently, we test the code on PTB dataset.
 - This is a initital version, I may optimize it in the future time. If you find any problems, please don't hesitate to contact me: eewangyisen AT gmail DOT com
+
+## Update
+- Fix one bug on the loss_dict_r and loss_dict_c. (Feb. 15, 2017)

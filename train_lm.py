@@ -211,7 +211,7 @@ def run(session, model, reader, word_dict, verbose=True):
         total_cost += cost
         total_word_cnt += word_cnt
         if model.mode == "Train":
-            word = np.reshape(x, (-1,2))
+            word = np.reshape(y, (-1,2))
             for index, i in enumerate(word):
                 loss_dict_r[tuple(i)].append(prob1r[index])
                 loss_dict_c[tuple(i)].append(prob1c[index])

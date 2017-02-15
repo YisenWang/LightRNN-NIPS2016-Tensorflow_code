@@ -59,7 +59,7 @@ def MCMF(word_to_id, loss_r, loss_c):
   # invoke the solver
   new_word_to_id = {}
   if min_cost_flow.Solve() == min_cost_flow.OPTIMAL:
-    print "After Optimization Costs = ", min_cost_flow.OptimalCost()
+    print "After Optimization Costs = ", min_cost_flow.OptimalCost()/1000.0
     print 
 
     for arc in xrange(min_cost_flow.NumArcs()):

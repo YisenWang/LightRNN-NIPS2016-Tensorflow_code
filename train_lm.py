@@ -3,6 +3,7 @@ import os
 import time
 import math
 import collections
+from operator import add
 
 import numpy as np
 import tensorflow as tf
@@ -213,8 +214,16 @@ def run(session, model, reader, word_dict, verbose=True):
         if model.mode == "Train":
             word = np.reshape(y, (-1,2))
             for index, i in enumerate(word):
-                loss_dict_r[tuple(i)].append(prob1r[index])
-                loss_dict_c[tuple(i)].append(prob1c[index])
+                if tuple(i) in loss_dict_r:
+                    tmp1 = map(add, loss_dict_r[tuple(i)], prob1r[index])
+                    loss_dict_r[tuple(i)] = tmp1
+                    tmp2 = map(add, loss_dict_c[tuple(i)], prob1c[index])
+                    loss_dict_c[tuple(i)] = tmp2
+                else:
+                    loss_dict_r[tuple(i)] = prob1r[index]
+                    loss_dict_c[tuple(i)] = prob1c[index]
+                #loss_dict_r[tuple(i)].append(prob1r[index])
+                #loss_dict_c[tuple(i)].append(prob1c[index])
 
         if verbose and (batch_id % max(10, batch_num//10)) == 0:
             ppl = np.exp(total_cost / total_word_cnt)
@@ -251,7 +260,7 @@ def main(_):
             trainm.update_lr(session, lr_updater.get_lr())
             INFO_LOG("Epoch {}, learning rate: {}".format(epoch + 1, lr_updater.get_lr()))
             cost, word_cnt, ppl, loss_dict_r, loss_dict_c = run(session, trainm, reader, word_dict)
-            INFO_LOG("Epoch %d Train perplexity %.3f words %d" % (epoch + 1, ppl, word_cnt))
+            INFO_LOG("Epoch %d Train costs %.3f words %d" % (epoch + 1, cost, word_cnt))
 
             #pdb.set_trace()
 

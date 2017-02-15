@@ -33,8 +33,10 @@ def MCMF(word_to_id, loss_r, loss_c):
 
   for i, word in enumerate(word_to_id.keys()):
     position = word_to_id[word]
-    lossr = map(sum, zip(*loss_r[tuple(position)]))
-    lossc = map(sum, zip(*loss_c[tuple(position)]))
+    lossr = loss_r[tuple(position)]
+    lossc = loss_c[tuple(position)]
+    #lossr = map(sum, zip(*loss_r[tuple(position)]))
+    #lossc = map(sum, zip(*loss_c[tuple(position)]))
     cnt = 0
     original_cost += (lossr[position[0]] + lossc[position[1]])
     for m in range(len(lossr)):

@@ -15,7 +15,7 @@ import mcmf
 import rnn
 
 flags = tf.flags
-flags.DEFINE_string("data_path", "ptb_data", "Where the training/test data is stored.")
+flags.DEFINE_string("data_path", "data", "Where the training/test data is stored.")
 
 FLAGS = flags.FLAGS
 
@@ -61,16 +61,16 @@ class LSTMLM(object):
                 vocab_size, embed_dim], initializer=tf.random_uniform_initializer(-stdv, stdv))
 
             #input_r = tf.reshape(inputs[:,0], [batch_size, step_size])
-            #pdb.set_trace()
+            input_r = self.inputs[:,:,0]
             input_c = self.inputs[:,:,1]
 
-            #input_r = tf.nn.embedding_lookup(self.word_embedding_r, input_r)
+            input_r = tf.nn.embedding_lookup(self.word_embedding_r, input_r)
             input_c = tf.nn.embedding_lookup(self.word_embedding_c, input_c)
-
             #inputs = tf.nn.embedding_lookup(self.word_embedding, self.inputs)
 
             # INPUT DROPOUT 
             if self.is_training and self.config.dropout_prob > 0:
+                input_r = tf.nn.dropout(input_r, keep_prob=1 - config.dropout_prob)
                 input_c = tf.nn.dropout(input_c, keep_prob=1 - config.dropout_prob)
 
             # LSTM
@@ -81,29 +81,31 @@ class LSTMLM(object):
 
             self.lstm = rnn.MultiLSTM(embed_dim, lstm_size, lstm_layers, lstm_forget_bias, scope="LSTM")
             lstm_dropout = self.config.dropout_prob if self.is_training and self.config.dropout_prob > 0 else None
-            state_r = self.initial_state
-
-            input_c = tf.unstack(input_c, axis=1)
+            state_c = self.initial_state
 
             logits_r = []
             logits_c = []
             self.probs_r = []
             self.probs_c = []
 
-            for t, _input_c in enumerate(input_c):
-                if t>0:
+            for time_step in range(step_size):
+                if time_step>0:
                     tf.get_variable_scope().reuse_variables()
-                output_r, state_c = self.lstm(_input_c, state_r, output_dropout=lstm_dropout)
+                
+                output_c, state_r = self.lstm(input_r[:, time_step, :], state_c, output_dropout=lstm_dropout)
+                tf.get_variable_scope().reuse_variables()
+								
+                output_r, state_c = self.lstm(input_c[:, time_step, :], state_r, output_dropout=lstm_dropout)
                 logit_r = tf.matmul(output_r, softmax_w_r) + softmax_b_r
                 row = tf.argmax(logit_r, axis=1)
-                input_r = tf.nn.embedding_lookup(self.word_embedding_r, row)
+                input_rr = tf.nn.embedding_lookup(self.word_embedding_r, row)
 
                 if self.is_training and self.config.dropout_prob > 0:
-                    input_r = tf.nn.dropout(input_r, keep_prob=1 - config.dropout_prob)
+                    input_rr = tf.nn.dropout(input_rr, keep_prob=1 - config.dropout_prob)
 
                 tf.get_variable_scope().reuse_variables()
 
-                output_c, state_r = self.lstm(input_r, state_c, output_dropout=lstm_dropout)
+                output_c, state_r = self.lstm(input_rr, state_c, output_dropout=lstm_dropout)
                 logit_c = tf.matmul(output_c, softmax_w_c) + softmax_b_c
 
                 logits_r.append(logit_r)
